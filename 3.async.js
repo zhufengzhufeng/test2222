@@ -31,21 +31,55 @@ function Promise(executor) {
 // then中要传入成功的回调和失败的回调
 Promise.prototype.then = function(onFufilled,onRejected){
     let self = this;
+    let promise2; // promise2为then调用后返回的新promise
     // 如果要是成功就调用成功的回调,并将成功的值传入
     if(self.status === 'resolved'){
-        onFufilled(self.value);
+        promise2 = new Promise(function(resolve,reject){
+            try{
+                // 执行时有异常发生,需要将promise2的状态置为失败态
+                let x = onFufilled(self.value); 
+                // x为返回的结果
+                // resolvePromise是对当前返回值进行解析,通过解析让promise2的状态转化成成功态还是失败态
+                resolvePromise(promise2,x,resolve,reject);
+            }catch(e){
+                reject(e);
+            }
+        })
     }
     if(self.status === 'rejected'){
-        onRejected(self.reason);
+        promise2 = new Promise(function(resolve,reject){
+            try{
+                let x = onRejected(self.reason);
+                resolvePromise(promise2,x,resolve,reject);
+            }catch(e){
+                reject(e)
+            }
+        })
     }
     if(self.status === 'pending'){
         // 如果是等待态,就将成功和失败的回调放到数组中
         self.onResolvedCallbacks.push(function(){
-            onFufilled(self.value);
+            promise2 = new Promise(function(resolve,reject){
+                try{
+                    let x = onFufilled(self.value);
+                    resolvePromise(promise2,x,resolve,reject)
+                }catch(e){
+                    reject(e);
+                }
+            })
         });
         self.onRejectedCallbacks.push(function(){
-            onRejected(self.reason);
+            promise2 = new Promise(function(resolve,reject){
+                try{
+                    let x = onRejected(self.reason);
+                    resolvePromise(promise2,x,resolve,reject)
+                }catch(e){
+                    reject(e);
+                }
+            })
         });
     }
+    return promise2;
 }
-module.exports = Promise
+module.exports = Promise;
+

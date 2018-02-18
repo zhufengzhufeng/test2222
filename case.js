@@ -5,11 +5,10 @@ let promise = new Promise(function(resolve,reject){
     },1000)
 });
 promise.then(function(data){
-    console.log(data);
+    return data+',no problem'
 },function(err){
     console.log(err);
-});
-promise.then(function(data){
+}).then(function(data){
     console.log(data);
 },function(err){
     console.log(err);
